@@ -2,26 +2,17 @@
 const fileGitDiff = require('../utils/fileGitDiff')
 const gc = require('../utils/gitConstants')
 const mc = require('../utils/metadataConstants')
+const pc = require('../utils/parsingConstants')
 const StandardHandler = require('./standardHandler')
+const fxp = require('fast-xml-parser')
 const fs = require('fs')
 const fse = require('fs-extra')
 const os = require('os')
 const path = require('path')
-const fxp = require('fast-xml-parser')
 
 const FULLNAME = 'fullName'
 const FULLNAME_XML_TAG = new RegExp(`<${FULLNAME}>(.*)</${FULLNAME}>`)
 const XML_TAG = new RegExp(`^[${gc.MINUS}${gc.PLUS}]?\\s*<([^(/><.)]+)>\\s*$`)
-const XML_HEADER = '<?xml version="1.0" encoding="utf-8"?>\n'
-const XML_PARSER_OPTION = {
-  ignoreAttributes: false,
-  ignoreNameSpace: false,
-}
-const JSON_PARSER_OPTION = {
-  ...XML_PARSER_OPTION,
-  format: true,
-  indentBy: '    ',
-}
 
 class InFileHandler extends StandardHandler {
   constructor(line, type, work, metadata) {
@@ -65,8 +56,8 @@ class InFileHandler extends StandardHandler {
         )
       )
     })
-    const xmlBuilder = new fxp.j2xParser(JSON_PARSER_OPTION)
-    const xmlContent = XML_HEADER + xmlBuilder.parse(result.fileContent)
+    const xmlBuilder = new fxp.j2xParser(pc.JSON_PARSER_OPTION)
+    const xmlContent = pc.XML_HEADER + xmlBuilder.parse(result.fileContent)
     fse.outputFileSync(path.join(this.config.output, this.line), xmlContent)
   }
 
@@ -121,7 +112,7 @@ class InFileHandler extends StandardHandler {
     const xmlData = fs.readFileSync(path.join(this.config.repo, this.line), {
       encoding: gc.UTF8_ENCODING,
     })
-    const result = fxp.parse(xmlData, XML_PARSER_OPTION)
+    const result = fxp.parse(xmlData, pc.XML_PARSER_OPTION)
     const authorizedKeys = Object.keys(Object.values(result)[0]).filter(x =>
       Object.prototype.hasOwnProperty.call(this.xmlObjectToPackageType, x)
     )
